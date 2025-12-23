@@ -27,7 +27,7 @@ A ausência de documentação faz parte do desafio e tem como objetivo avaliar a
 - entendimento de arquitetura e padrões utilizados;
 - tomada de decisão diante de cenários incompletos ou ambíguos.
 
-## Backend (já implementado)
+## Backend
 
 - NestJS
 - PostgreSQL
@@ -95,7 +95,7 @@ O candidato deverá implementar um frontend utilizando Next.js 15 (React), com f
   - Lista vazia
   - Erro de requisição
 
-### Stack obrigatória (Next/React — atual)
+### Stack obrigatória (Next/React)
 
 O frontend deve ser desenvolvido obrigatoriamente com:
 
@@ -117,9 +117,29 @@ Serão avaliados os seguintes aspectos técnicos:
   - Mensagens de erro claras
   - Feedbacks de sucesso
   - Botões desabilitados durante submissões
-- Tipagem correta e consistente dos DTOs:
+- Tipagem correta e consistente:
   - Autenticação
   - Contratos
   - Paginação
   - Filtros
 - Uso consistente do design system (Shadcn UI + Tailwind CSS)
+
+---
+
+# 3º ponto de avaliação
+
+O candidato deverá organizar e entregar o projeto seguindo os requisitos abaixo, garantindo rastreabilidade e boas práticas de versionamento.
+
+## Repositório e estrutura obrigatória
+
+- Criar um repositório público no GitHub com o nome: `desafio-cade-consig-[nome-do-candidato]`
+- Dentro do repositório deve conter:
+  - Uma pasta chamada `upload-contratos` com o projeto frontend
+  - Currículo atualizado do candidato
+
+É obrigatório commits consistentes e seguindo o padrão [Conventional Commits]("https://www.conventionalcommits.org/en/v1.0.0/").
+
+## Envio do projeto
+
+- Enviar o link do repositório público por e-mail para: desenvolvimento@cadeconsig.com.br
+- Assunto do e-mail (assunto): Desafio Cadê Consig - Nome do Candidato

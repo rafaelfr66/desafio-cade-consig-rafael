@@ -89,7 +89,8 @@ O candidato deverá implementar um frontend utilizando Next.js 15 (React), com f
 **Tela de Listagem de Contratos**
 
 - Implementação da listagem de contratos consumindo a API.
-- Suporte a paginação.
+- Paginação de dados.
+- Filtro de dados.
 - Tratamento adequado dos seguintes estados:
   - Carregamento
   - Lista vazia

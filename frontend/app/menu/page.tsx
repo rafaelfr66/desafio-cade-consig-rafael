@@ -6,7 +6,7 @@ import { useLoggedFlag } from '@/queries/loggedFlag'
 import { useRouter } from 'next/navigation'
 import { Box, Button, Typography } from '@mui/material'
 import UploadFileIcon from '@mui/icons-material/UploadFile'
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
+import DescriptionIcon from '@mui/icons-material/Description';
 import { toast } from 'react-toastify'
 
 export default function MenuPage() {
@@ -41,7 +41,7 @@ export default function MenuPage() {
         <Button
           variant="contained"
           color="success"
-          startIcon={<CheckCircleOutlineIcon />}
+          startIcon={<DescriptionIcon />}
           sx={{ mt: 1 }}
           onClick={() => router.push('/contratos')}
         >
@@ -51,11 +51,11 @@ export default function MenuPage() {
         <Button
           variant="contained"
           color="warning"
-          startIcon={<CheckCircleOutlineIcon />}
+          startIcon={<UploadFileIcon />}
           sx={{ mt: 1 }}
           onClick={() => router.push('/upload')}
         >
-          Upload de CSV
+           Upload de CSV
         </Button>
       </Box>
     </Box>

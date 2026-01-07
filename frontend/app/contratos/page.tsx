@@ -1,4 +1,5 @@
 'use client'
+
 import { useEffect, useState } from 'react'
 import { api } from '../services/api'
 import { useLoggedFlag } from '@/queries/loggedFlag'
@@ -15,8 +16,41 @@ import {
   TableCell,
   TableBody,
   CircularProgress,
-} from "@mui/material";
+  MenuItem,
+} from '@mui/material'
 
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+// Zod
+const filtrosSchema = z.object({
+  id_contrato: z.string().optional(),
+  nome_cliente: z.string().optional(),
+  email_cliente: z.string().optional(),
+
+  tipo_plano: z
+    .union([
+      z.enum(['BASICO', 'PRO', 'ENTERPRISE']),
+      z.literal(''),
+    ])
+    .optional(),
+
+  status: z
+    .union([
+      z.enum(['ATIVO', 'INATIVO']),
+      z.literal(''),
+    ])
+    .optional(),
+
+  data_inicio: z.string().optional(),
+  valor_mensal: z.string().optional(),
+})
+
+type FiltrosForm = z.infer<typeof filtrosSchema>
+
+
+// Type do contrato
 type Contrato = {
   id_contrato: string
   nome_cliente: string
@@ -27,35 +61,73 @@ type Contrato = {
   valor_mensal: number
 }
 
+function formatBRL(value: string) {
+  const numeric = value.replace(/\D/g, '')
+  const number = Number(numeric) / 100
+
+  return number.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  })
+}
+
 export default function ContratosPage() {
   const [contratos, setContratos] = useState<Contrato[]>([])
   const [loading, setLoading] = useState(false)
-  const { logged } = useLoggedFlag();
-  const router = useRouter();
+  const [page, setPage] = useState(1)
 
-  const [filters, setFilters] = useState({
-    id_contrato: '',
-    nome_cliente: '',
-    email_cliente: '',
-    tipo_plano: '',
-    status: '',
-    data_inicio: '',
-    valor_mensal: '',
-    page: 1,
-    limit: 20,
+  const { logged } = useLoggedFlag()
+  const router = useRouter()
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+  } = useForm<FiltrosForm>({
+    resolver: zodResolver(filtrosSchema),
+    defaultValues: {
+      id_contrato: '',
+      nome_cliente: '',
+      email_cliente: '',
+      tipo_plano: '',
+      status: '',
+      data_inicio: '',
+      valor_mensal: '',
+    },
   })
 
-  async function loadContratos() {
+  // Função pra resetar os filtros
+  function handleClear() {
+    reset()
+    setPage(1)
+    loadContratos()
+  }
+
+  const valorMensal = watch('valor_mensal')
+
+  async function loadContratos(data?: FiltrosForm) {
     setLoading(true)
 
     try {
+      const valorNumerico = data?.valor_mensal
+        ? Number(data.valor_mensal.replace(/\D/g, '')) / 100
+        : undefined
+
       const res = await api.get('/contratos', {
-        params: filters,
+        params: {
+          ...data,
+          valor_mensal: valorNumerico,
+          page,
+          limit: 20,
+        },
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       })
-      setContratos(res.data.items);
+
+      setContratos(res.data.items)
     } catch (err) {
       console.error(err)
       alert('Erro ao carregar contratos')
@@ -66,109 +138,91 @@ export default function ContratosPage() {
 
   useEffect(() => {
     if (!logged) {
-      router.push('/login');
+      router.push('/login')
     } else {
-      loadContratos();
+      loadContratos()
     }
-  }, [filters.page])
+  }, [logged, page])
 
-function handleChange(
-  e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-) {
-  const { name, value } = e.target
-  setFilters((prev) => ({ ...prev, [name]: value }))
-}
-
-
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault()
-    setFilters((prev) => ({ ...prev, page: 1 }))
-    loadContratos()
+  function onSubmit(data: FiltrosForm) {
+    setPage(1)
+    loadContratos(data)
   }
 
   return (
     <div className="p-6">
-      <Typography variant="h4" className="mb-6 font-semibold">
+      <Typography variant="h4" mb={3}>
         Contratos
       </Typography>
 
-      <Card className="mb-6">
+      {/* Filtros */}
+      <Card sx={{ mb: 4 }}>
         <CardContent>
-          <form
-            onSubmit={handleSearch}
-            className="grid grid-cols-1 md:grid-cols-4 gap-4"
-          >
-            <TextField
-              label="ID"
-              name="id_contrato"
-              value={filters.id_contrato}
-              onChange={handleChange}
-            />
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <TextField label="ID" {...register('id_contrato')} />
+              <TextField label="Cliente" {...register('nome_cliente')} />
+              <TextField label="Email" {...register('email_cliente')} />
 
-            <TextField
-              label="Cliente"
-              name="nome_cliente"
-              value={filters.nome_cliente}
-              onChange={handleChange}
-            />
+              <TextField select label="Plano" {...register('tipo_plano')}>
+                <MenuItem value="">Todos</MenuItem>
+                <MenuItem value="BASICO">BASICO</MenuItem>
+                <MenuItem value="PRO">PRO</MenuItem>
+                <MenuItem value="ENTERPRISE">ENTERPRISE</MenuItem>
+              </TextField>
 
-            <TextField
-              label="Email"
-              name="email_cliente"
-              value={filters.email_cliente}
-              onChange={handleChange}
-            />
+              <TextField select label="Status" {...register('status')}>
+                <MenuItem value="">Todos</MenuItem>
+                <MenuItem value="ATIVO">ATIVO</MenuItem>
+                <MenuItem value="INATIVO">INATIVO</MenuItem>
+              </TextField>
 
-            <TextField
-              label="Plano"
-              name="tipo_plano"
-              value={filters.tipo_plano}
-              onChange={handleChange}
-            />
+              <TextField
+                type="date"
+                label="Data início"
+                InputLabelProps={{ shrink: true }}
+                {...register('data_inicio')}
+              />
 
-            <TextField
-              label="Status"
-              name="status"
-              value={filters.status}
-              onChange={handleChange}
-            />
-
-            <TextField
-              type="date"
-              label="Data início"
-              name="data_inicio"
-              value={filters.data_inicio}
-              onChange={handleChange}
-              InputLabelProps={{ shrink: true }}
-            />
-
-            <TextField
-              label="Valor mensal"
-              name="valor_mensal"
-              value={filters.valor_mensal}
-              onChange={handleChange}
-            />
-
-            <div className="flex items-end">
+              <TextField
+                label="Valor mensal"
+                value={valorMensal ?? ''}
+                onChange={(e) =>
+                  setValue('valor_mensal', formatBRL(e.target.value))
+                }
+              />
+            </div>
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
               <Button
-                sx={{
-                  backgroundColor: "#FF0000"
-                }}
                 type="submit"
                 variant="contained"
-                fullWidth
+                color="error"
+                size="small"
+                sx={{ borderRadius: 1 }}
               >
                 Buscar
-              </Button></div>
+              </Button>
+
               <Button
                 variant="contained"
                 color="warning"
-                sx={{ mt: 1 }}
+                size="small"
+                sx={{ borderRadius: 1 }}
                 onClick={router.back}
               >
                 Voltar
               </Button>
-                  
+
+              <Button
+                variant="outlined"
+                color="inherit"
+                size="small"
+                sx={{ borderRadius: 1 }}
+                onClick={handleClear}
+              >
+                Limpar filtros
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
@@ -194,48 +248,55 @@ function handleChange(
               </TableHead>
 
               <TableBody>
-                {contratos.map((c) => (
-                  <TableRow key={c.id_contrato} hover>
-                    <TableCell>{c.id_contrato}</TableCell>
-                    <TableCell>{c.nome_cliente}</TableCell>
-                    <TableCell>{c.email_cliente}</TableCell>
-                    <TableCell>{c.tipo_plano}</TableCell>
-                    <TableCell>{c.status}</TableCell>
-                    <TableCell>
-                      {new Date(c.data_inicio).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      {Number(c.valor_mensal).toLocaleString("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      })}
+                {contratos.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center">
+                      Sem contratos ativos
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  contratos.map((c) => (
+                    <TableRow key={c.id_contrato} hover>
+                      <TableCell>{c.id_contrato}</TableCell>
+                      <TableCell>{c.nome_cliente}</TableCell>
+                      <TableCell>{c.email_cliente}</TableCell>
+                      <TableCell>{c.tipo_plano}</TableCell>
+                      <TableCell>{c.status}</TableCell>
+                      <TableCell>
+                        {new Date(c.data_inicio).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                       {Number(c.valor_mensal).toLocaleString('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           )}
         </CardContent>
       </Card>
 
+      {/* Paginação */}
       <div className="flex items-center justify-center gap-4 mt-6">
         <Button
           variant="outlined"
-          disabled={filters.page === 1}
-          onClick={() =>
-            setFilters((p) => ({ ...p, page: p.page - 1 }))
-          }
+          disabled={page === 1}
+          onClick={() => setPage((p) => p - 1)}
         >
           Anterior
         </Button>
 
-        <Typography>Página {filters.page}</Typography>
+        <Typography>Página {page}</Typography>
 
         <Button
           variant="outlined"
-          onClick={() =>
-            setFilters((p) => ({ ...p, page: p.page + 1 }))
-          }
+          onClick={() => setPage((p) => p + 1)}
         >
           Próxima
         </Button>

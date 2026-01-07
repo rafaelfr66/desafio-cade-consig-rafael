@@ -21,7 +21,7 @@ export default function LoginPage() {
     try {
       localStorage.setItem('token', res.data.access_token)
       setLogged(true);
-      router.push('/');
+      router.push('/menu');
     } catch (error) {
       console.log(error);
     }

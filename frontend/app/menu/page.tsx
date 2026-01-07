@@ -9,30 +9,9 @@ import UploadFileIcon from '@mui/icons-material/UploadFile'
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
 import { toast } from 'react-toastify'
 
-export default function UploadPage() {
+export default function MenuPage() {
   const { logged } = useLoggedFlag()
   const router = useRouter()
-
-  const [file, setFile] = useState<File | null>(null)
-
-  async function handleUpload() {
-    if (!file) return
-
-    try {
-      const form = new FormData()
-      form.append('file', file)
-
-      await api.post('/contratos/upload', form, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      })
-      toast.success('Upload realizado com sucesso!');
-
-    } catch (error) {
-      toast.error(`Ops, parece que houve um erro no upload: ${error}`);
-    }
-  }
 
   useEffect(() => {
     if (!logged) {
@@ -58,33 +37,15 @@ export default function UploadPage() {
         borderRadius={4}
         minWidth={320}
       >
-        <Button
-          variant="outlined"
-          component="label"
-          startIcon={<UploadFileIcon />}
-        >
-          Upload CSV
-          <input
-            type="file"
-            hidden
-            accept=".csv"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          />
-        </Button>
-
-        <Typography variant="body2" color="text.secondary">
-          {file?.name ?? 'Nenhum arquivo selecionado'}
-        </Typography>
 
         <Button
           variant="contained"
           color="success"
           startIcon={<CheckCircleOutlineIcon />}
-          disabled={!file}
           sx={{ mt: 1 }}
-          onClick={handleUpload}
+          onClick={() => router.push('/contratos')}
         >
-          Confirmar upload
+          Ver contratos
         </Button>
 
         <Button
@@ -92,9 +53,9 @@ export default function UploadPage() {
           color="warning"
           startIcon={<CheckCircleOutlineIcon />}
           sx={{ mt: 1 }}
-          onClick={router.back}
+          onClick={() => router.push('/upload')}
         >
-          Voltar
+          Upload de CSV
         </Button>
       </Box>
     </Box>

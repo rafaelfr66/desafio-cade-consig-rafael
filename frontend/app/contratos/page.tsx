@@ -159,8 +159,16 @@ function handleChange(
                 fullWidth
               >
                 Buscar
+              </Button></div>
+              <Button
+                variant="contained"
+                color="warning"
+                sx={{ mt: 1 }}
+                onClick={router.back}
+              >
+                Voltar
               </Button>
-            </div>
+                  
           </form>
         </CardContent>
       </Card>
